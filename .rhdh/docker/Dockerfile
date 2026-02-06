@@ -52,15 +52,12 @@ RUN dnf install -q -y --allowerasing --nobest \
 ENV EXTERNAL_SOURCE_NESTED=.
 ENV CONTAINER_SOURCE=/opt/app-root/src
 
-# Env vars
-ENV YARN=$CONTAINER_SOURCE/.yarn/releases/yarn-3.8.7.cjs
-
 WORKDIR $CONTAINER_SOURCE/
-COPY $EXTERNAL_SOURCE_NESTED/.yarn ./.yarn
 COPY $EXTERNAL_SOURCE_NESTED/.yarnrc.yml ./
+COPY $EXTERNAL_SOURCE_NESTED/package.json ./
 
-# Add execute permissions to yarn; add yarn to path via symlink
-RUN chmod +x "$YARN" && ln -s "$YARN" /usr/local/bin/yarn
+# Enable corepack and set the Yarn version from package.json as the global default
+RUN npm install -g corepack && corepack enable && corepack prepare --activate
 
 # Stage 2 - Install dependencies
 FROM skeleton AS deps
@@ -91,7 +88,7 @@ RUN NODE_HEADERS_VERSION=$(node --version); echo "=== Install node headers $NODE
   rm -fr releases/node-${NODE_HEADERS_VERSION}-headers.tar.gz
 
 # Increase timeout for yarn install
-RUN "$YARN" config set httpTimeout 600000
+RUN yarn config set httpTimeout 600000
 
 # Using cachi2 env vars:
 #   export YARN_ENABLE_GLOBAL_CACHE=false
@@ -100,7 +97,7 @@ RUN "$YARN" config set httpTimeout 600000
 #   export YARN_GLOBAL_FOLDER=/cachi2/output/deps/yarn
 RUN cat /cachi2/cachi2.env; echo; find /cachi2/output/deps/yarn/*
 
-RUN echo "=== YARN INSTALL ==="; FAILED=0; "$YARN" install --immutable || FAILED=1; \
+RUN echo "=== YARN INSTALL ==="; FAILED=0; yarn install --immutable || FAILED=1; \
   for d in /tmp/xfs-*; do if [[ -f ${d}/build.log ]]; then \
   (( FAILED = FAILED + 1 )); \
   echo; echo $d; \
@@ -138,7 +135,7 @@ RUN \
 # suppress git warnings about dubious ownership in repository at '/opt/app-root/src' when building
 RUN echo "=== YARN BUILD ==="; FAILED=0; \
   git config --global --add safe.directory /opt/app-root/src; \
-  "$YARN" build || FAILED=1; \
+  yarn build || FAILED=1; \
   for d in $(find . -name yarn-install.log); do \
   (( FAILED = FAILED + 1 )); echo; echo $d; echo "======"; cat ${d}; \
   done; \
@@ -146,7 +143,7 @@ RUN echo "=== YARN BUILD ==="; FAILED=0; \
 
 WORKDIR $CONTAINER_SOURCE/dynamic-plugins
 
-RUN echo "=== DYNAMIC PLUGIN YARN INSTALL ==="; FAILED=0; "$YARN" install --immutable || FAILED=1; \
+RUN echo "=== DYNAMIC PLUGIN YARN INSTALL ==="; FAILED=0; yarn install --immutable || FAILED=1; \
   for d in /tmp/xfs-*; do if [[ -f ${d}/build.log ]]; then \
   (( FAILED = FAILED + 1 )); \
   echo; echo $d; \
@@ -156,13 +153,13 @@ RUN echo "=== DYNAMIC PLUGIN YARN INSTALL ==="; FAILED=0; "$YARN" install --immu
   if [[ $FAILED -gt 0 ]]; then exit $FAILED; fi
 
 RUN echo "=== EXPORT DYNAMIC PLUGINS ==="; FAILED=0; \
-  "$YARN" export-dynamic || FAILED=1; \
+  yarn export-dynamic || FAILED=1; \
   for d in $(find . -name yarn-install.log); do \
   (( FAILED = FAILED + 1 )); echo; echo $d; echo "======"; cat ${d}; \
   done; \
   if [[ $FAILED -gt 0 ]]; then exit $FAILED; fi
 
-RUN echo "=== YARN COPY DYNAMIC PLUGINS in $(pwd) ==="; "$YARN" copy-dynamic-plugins dist
+RUN echo "=== YARN COPY DYNAMIC PLUGINS in $(pwd) ==="; yarn copy-dynamic-plugins dist
 
 WORKDIR $CONTAINER_SOURCE
 
@@ -203,11 +200,11 @@ RUN echo "=== lib64 symlinks ==="; \
   done
 
 # Increase timeout for yarn install
-RUN "$YARN" config set httpTimeout 600000
+RUN yarn config set httpTimeout 600000
 
 # Install production dependencies
 # hadolint ignore=DL3059
-RUN echo "=== YARN WORKSPACES FOCUS ==="; FAILED=0; "$YARN" workspaces focus --all --production || FAILED=1; \
+RUN echo "=== YARN WORKSPACES FOCUS ==="; FAILED=0; yarn workspaces focus --all --production || FAILED=1; \
   for d in /tmp/xfs-*; do if [[ -f ${d}/build.log ]]; then \
   (( FAILED = FAILED + 1 )); echo; echo $d; echo "======"; cat ${d}/build.log; \
   fi; done; \

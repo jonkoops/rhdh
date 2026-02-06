@@ -16,19 +16,11 @@ ENV CI=1 \
     GOPATH="/go" \
     PATH="$GOPATH/bin:/usr/local/go/bin:$PATH"
 
-# Copy Yarn configuration files to correctly use the project-defined Yarn version
-COPY .yarn /root/.yarn
-COPY .yarnrc.yml /root/.yarnrc.yml
+# Enable corepack and set the Yarn version from package.json as the global default
 RUN rm -f $(which yarn) || true
-
-# Extract the correct version from the file and install
-RUN YARN_VERSION=$(awk -F'[-.]' '/yarnPath:/ {print $(NF-3)"."$(NF-2)"."$(NF-1)}' /root/.yarnrc.yml) && \
-  echo "Detected Yarn Version: $YARN_VERSION" && \
+RUN --mount=type=bind,source=package.json,target=/root/package.json \
   corepack enable && \
-  corepack prepare "yarn@$YARN_VERSION" --activate && \
-  yarn -v && \
-  rm -f /root/.yarnrc.yml && \
-  echo "export PATH=\"\$HOME/.yarn/bin:\$HOME/.config/yarn/global/node_modules/.bin:\$PATH\"" >> /root/.bashrc && \
+  cd /root && corepack prepare --activate && \
   echo 'echo "Yarn version: $(yarn -v)"' >> /root/.bashrc
 
 # Install essential dependencies and Node.js tools
