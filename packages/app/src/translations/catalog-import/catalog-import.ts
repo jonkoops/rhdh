@@ -6,7 +6,5 @@ export const catalogImportTranslations = createTranslationResource({
   translations: {
     en: () => import('./catalog-import-en'),
     fr: () => import('./fr'),
-    it: () => import('./it'),
-    ja: () => import('./ja'),
   },
 });
