@@ -64,7 +64,6 @@ ignore:
   - "**/build/**"
   - "**/node_modules/**"
   - "e2e-tests/**"
-  - "dynamic-plugins/wrappers/**"
   - ".claude/**"
   - "docs/**"
 
@@ -90,7 +89,6 @@ flag_management:
         - packages/app/src/**
         - packages/backend/src/**
         - packages/plugin-utils/src/**
-        - dynamic-plugins/_utils/src/**
       carryforward: true
     # Paths intentionally mirror the rhdh flag — both measure the same source
     # from different test types. Isolation relies on --flag at upload time,
@@ -101,5 +99,4 @@ flag_management:
         - packages/app/src/**
         - packages/backend/src/**
         - packages/plugin-utils/src/**
-        - dynamic-plugins/_utils/src/**
       carryforward: true

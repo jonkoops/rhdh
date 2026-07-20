@@ -74,7 +74,7 @@ TARGET_ARCH="$(get_target_arch)"
 #######################################
 clean_directories() {
   local component_dir="$1"
-  local directories=("${component_dir}" "${component_dir}/dynamic-plugins")
+  local directories=("${component_dir}")
   for directory in "${directories[@]}"; do
     if [[ -d "${directory}" ]]; then
       pushd "${directory}" > /dev/null
@@ -211,7 +211,7 @@ build_cache() {
     fetch-deps --dev-package-managers \
     --source . \
     --output /cachi2/output \
-    '[{"type": "rpm", "path": "."}, {"type": "yarn","path": "."}, {"type": "yarn","path": "./dynamic-plugins"}, {"type": "pip","path": "./python", "allow_binary": "false"}]'
+    '[{"type": "rpm", "path": "."}, {"type": "yarn","path": "."}, {"type": "pip","path": "./python", "allow_binary": "false"}]'
 
   podman run --rm -ti \
     "${platform_args[@]}" \

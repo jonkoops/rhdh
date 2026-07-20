@@ -34,24 +34,17 @@ source build needed; works from a fresh clone. Requires skopeo (preinstalled in 
 
 Alternatives:
 
-- **Catalog index** — the index's `dynamic-plugins.default.yaml` references the core
+- **Catalog index** — the index's `dynamic-plugins.default.yaml` references some
   plugins by local `./dynamic-plugins/dist/…` paths that only exist after a source
-  build, so on a fresh clone most plugins are skipped. Use only after building
-  `dynamic-plugins` from source (main -> `:latest`; release branches -> the matching
-  `:1.y` tag):
+  build, so on a fresh clone those plugins are skipped. Use only after the catalog
+  index has been updated to use OCI refs
+  (main -> `:latest`; release branches -> the matching `:1.y` tag):
 
   ```bash
   CATALOG_INDEX_IMAGE=quay.io/rhdh/plugin-catalog-index:latest \
     npx @red-hat-developer-hub/cli-module-install-dynamic-plugins install dynamic-plugins-root
   ```
 
-- **Offline from-source** (frontend plugins only; requires a reconciled workspace —
-  see "Known issues"):
-
-  ```bash
-  yarn --cwd dynamic-plugins export-dynamic
-  yarn --cwd dynamic-plugins copy-dynamic-plugins ../dynamic-plugins-root
-  ```
 
 ### 2. Run
 
@@ -115,7 +108,7 @@ existing specs **pass unmodified**:
 
 Not enablable yet: `plugins/licensed-users-info-backend` — the
 `licensed-users-info-backend` plugin is not published to the overlays OCI registry
-(ghcr) and only exists as a `./dynamic-plugins/dist` source build.
+(ghcr).
 
 ## CI
 
